@@ -19,7 +19,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to PostgreSQL database: %v", err)
 	}
-
+	// Perform db migrations
+	err = initializers.DoMigrate(db)
+	if err != nil {
+		log.Println("Failed to migrate db", err)
+		return 
+	}
 	routes.SetupRoutes(router, db)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
