@@ -1,11 +1,9 @@
 package services
 
 import (
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
 	"task_one/dto"
 	"task_one/models"
 	"task_one/repository"
@@ -75,51 +73,4 @@ func (s *StringService) CreateNewString(input dto.CreateNewStringEntryRequest) (
 	}
 
 	return &finalResponse, nil
-}
-
-func getLength(value string) int {
-	return len(value)
-}
-
-func getIsPalindrome(value string) bool {
-	lower := strings.ToLower(value)
-	clean := strings.ReplaceAll(lower, " ", "")
-	return clean == reverseString(clean)
-}
-
-func reverseString(value string) string {
-	var b strings.Builder
-	for i := len(value) - 1; i >= 0; i-- {
-		b.WriteByte(value[i])
-	}
-	return b.String()
-}
-
-func getUniqueCharsCount(value string) int {
-	seen := make(map[rune]struct{})
-	for _, r := range value {
-		seen[r] = struct{}{}
-	}
-	return len(seen)
-}
-
-// Get SHA256 hash for the string
-func getHash(value string) string {
-	sum := sha256.Sum256([]byte(value))
-	return fmt.Sprintf("%x", sum[:])
-}
-
-func getCharFreqMap(value string) map[string]int {
-	freqMap := make(map[string]int)
-	normalized := strings.TrimSpace(strings.ToLower(value))
-	for _, r := range normalized {
-		ch := string(r)
-		freqMap[ch]++
-	}
-	return freqMap
-}
-
-func getWordCount(value string) int {
-	words := strings.Fields(value)
-	return len(words)
 }
