@@ -42,6 +42,5 @@ func (h *StringsHandler) CreateNewString(c *gin.Context){
 		})
 	}
 
-
 	c.JSON(http.StatusCreated, response)
 }

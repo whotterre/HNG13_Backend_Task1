@@ -1,20 +1,16 @@
 package repository
 
-import "database/sql"
+import (
+	"gorm.io/gorm"
+)
 
 type StringRepository interface {
-
 }
 
 type stringRepository struct {
-	db *sql.DB
+	db *gorm.DB
 }
 
-func NewStringRepository(db *sql.DB) StringRepository {
+func NewStringRepository(db *gorm.DB) StringRepository {
 	return &stringRepository{db: db}
 }
-
-
-
-
-

@@ -1,8 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
-	"net/http"
+	"task_one/config"
 	"task_one/initializers"
 	"task_one/routes"
 
@@ -10,22 +11,21 @@ import (
 )
 
 func main() {
+	// Load configuration
+	cfg := config.LoadConfig()
 	router := gin.Default()
 
-	conn, err := initializers.ConnectDB()
+	db, err := initializers.ConnectDB(cfg)
 	if err != nil {
-		log.Printf("Failed to connect to SQLite3 db")
-		return 
+		log.Fatalf("Failed to connect to PostgreSQL database: %v", err)
 	}
 
-	routes.SetupRoutes(router, conn)
+	routes.SetupRoutes(router, db)
 
-	addr := ":4000"
-	
-	err = http.ListenAndServe(addr, router)
-	if err != nil {
-		log.Fatal("Failed to start http server because", err)
+	addr := fmt.Sprintf(":%s", cfg.Port)
+	log.Printf("Starting server on %s", addr)
+
+	if err := router.Run(addr); err != nil {
+		log.Fatalf("Failed to start http server: %v", err)
 	}
-
-	router.Run()
 }
