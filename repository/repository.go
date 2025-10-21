@@ -13,6 +13,7 @@ type StringRepository interface {
 	GetStringByValue(value string) (*models.StringEntry, error)
 	GetStringById(id string) (*models.StringEntry, error)
 	FilterByCriteria(input dto.FilterByCriteriaData) (*[]models.StringEntry, error)
+	DeleteStringValue(hash string) error
 }
 
 type stringRepository struct {
@@ -23,9 +24,9 @@ func NewStringRepository(db *gorm.DB) StringRepository {
 	return &stringRepository{db: db}
 }
 
-func (s stringRepository) GetStringByValue(value string) (*models.StringEntry, error) {
+func (r stringRepository) GetStringByValue(value string) (*models.StringEntry, error) {
 	var entry models.StringEntry
-	err := s.db.Where("value = ?", value).First(&entry).Error
+	err := r.db.Where("value = ?", value).First(&entry).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -35,9 +36,9 @@ func (s stringRepository) GetStringByValue(value string) (*models.StringEntry, e
 	return &entry, nil
 }
 
-func (s stringRepository) GetStringById(id string) (*models.StringEntry, error) {
+func (r stringRepository) GetStringById(id string) (*models.StringEntry, error) {
 	var entry models.StringEntry
-	err := s.db.Where("id = ?", id).First(&entry).Error
+	err := r.db.Where("id = ?", id).First(&entry).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -47,16 +48,16 @@ func (s stringRepository) GetStringById(id string) (*models.StringEntry, error) 
 	return &entry, nil
 }
 
-func (s stringRepository) CreateNewStringRecord(stringData models.StringEntry) (*models.StringEntry, error) {
-	if err := s.db.Create(&stringData).Error; err != nil {
+func (r stringRepository) CreateNewStringRecord(stringData models.StringEntry) (*models.StringEntry, error) {
+	if err := r.db.Create(&stringData).Error; err != nil {
 		return nil, err
 	}
 	return &stringData, nil
 }
 
-func (s stringRepository) FilterByCriteria(input dto.FilterByCriteriaData) (*[]models.StringEntry, error) {
+func (r stringRepository) FilterByCriteria(input dto.FilterByCriteriaData) (*[]models.StringEntry, error) {
 	var entries []models.StringEntry
-	query := s.db.Model(&models.StringEntry{})
+	query := r.db.Model(&models.StringEntry{})
 
 	// Add conditions only if the filter values are provided
 	if input.IsPalindrome != nil {
@@ -81,4 +82,11 @@ func (s stringRepository) FilterByCriteria(input dto.FilterByCriteriaData) (*[]m
 		return nil, err
 	}
 	return &entries, nil
+}
+
+func (r stringRepository) DeleteStringValue(hash string) error {
+	if err := r.db.Where("id = ?", hash).Delete(&models.StringEntry{}).Error; err != nil {
+		return err
+	}
+	return nil
 }

@@ -14,6 +14,7 @@ type StringService interface {
 	CreateNewString(input dto.CreateNewStringEntryRequest) (*dto.CreateNewStringResponse, error)
 	GetStringByValue(value string) (*dto.GetStringByValueResponse, error)
 	FilterByCriteria(input dto.FilterByCriteriaData) (*dto.FilterByCriteriaResponse, error)
+	DeleteStringEntry(value string) error
 }
 
 type stringService struct {
@@ -161,9 +162,26 @@ func (s *stringService) FilterByCriteria(input dto.FilterByCriteriaData) (*dto.F
 	}
 
 	response := dto.FilterByCriteriaResponse{
-		Data:          transformedData,
-		Count:         len(transformedData),
+		Data:           transformedData,
+		Count:          len(transformedData),
 		FiltersApplied: filtersMap,
 	}
 	return &response, nil
+}
+
+func (s *stringService) DeleteStringEntry(value string) error {
+	// Compute the hash
+	hashValue := GetHash(value)
+
+	// Check if it exists
+	existing, err := s.stringRepo.GetStringById(hashValue)
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return fmt.Errorf("not found: string does not exist in the system")
+	}
+
+	// Delete the string
+	return s.stringRepo.DeleteStringValue(hashValue)
 }

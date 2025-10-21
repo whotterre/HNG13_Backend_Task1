@@ -17,4 +17,5 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 	router.POST("/strings", stringHandler.CreateNewString)
 	router.GET("/strings/:string_value", stringHandler.GetStringByValue)
 	router.GET("/strings", stringHandler.FilterByCriteria)
+	router.DELETE("/strings/:string_value", stringHandler.DeleteStringEntry)
 }

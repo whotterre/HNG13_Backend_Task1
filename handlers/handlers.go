@@ -146,3 +146,24 @@ func (h *StringsHandler) FilterByCriteria(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *StringsHandler) DeleteStringEntry(c *gin.Context) {
+	// get the string value
+	value := c.Param("string_value")
+
+	// pass down to service
+	err := h.stringsService.DeleteStringEntry(value)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{
+				"message": "String does not exist in the system",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to delete string",
+		})
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
