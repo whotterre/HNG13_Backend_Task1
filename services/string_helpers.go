@@ -37,7 +37,7 @@ func getUniqueCharsCount(value string) int {
 }
 
 // getHash computes the SHA-256 hash of the string
-func getHash(value string) string {
+func GetHash(value string) string {
 	sum := sha256.Sum256([]byte(value))
 	return fmt.Sprintf("%x", sum[:])
 }

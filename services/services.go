@@ -29,7 +29,7 @@ func (s *StringService) CreateNewString(input dto.CreateNewStringEntryRequest) (
 	}
 	// Compute string details
 	stringDetails := models.StringDetails{
-		Hash:         getHash(input.Value),
+		Hash:         GetHash(input.Value),
 		Length:       getLength(input.Value),
 		IsPalindrome: getIsPalindrome(input.Value),
 		UniqueChars:  getUniqueCharsCount(input.Value),
@@ -66,11 +66,45 @@ func (s *StringService) CreateNewString(input dto.CreateNewStringEntryRequest) (
 			IsPalindrome: stringDetails.IsPalindrome,
 			UniqueChars:  stringDetails.UniqueChars,
 			WordCount:    stringDetails.WordCount,
-			Hash:         stringDetails.Hash,
+			SHA256Hash:   stringDetails.Hash,
 			FreqMap:      stringDetails.FreqMap,
-			CreatedAt:    now,
 		},
+		CreatedAt: now,
 	}
 
 	return &finalResponse, nil
+}
+
+func (s *StringService) GetStringByValue(value string) (*dto.GetStringByValueResponse, error) {
+	// Generate SHA256 sum
+	stringHash := GetHash(value)
+
+	stringData, err := s.stringRepo.GetStringById(stringHash)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return not found error if string doesn't exist
+	if stringData == nil {
+		return nil, fmt.Errorf("not found: string does not exist in the system")
+	}
+
+	var freqMap map[string]int
+	if err := json.Unmarshal(stringData.CharacterFrequencyMap, &freqMap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal frequency map: %v", err)
+	}
+
+	response := dto.GetStringByValueResponse{
+		Id:    stringData.ID,
+		Value: stringData.Value,
+		Properties: dto.StringProperties{
+			Length:       stringData.Length,
+			IsPalindrome: stringData.IsPalindrome,
+			UniqueChars:  stringData.UniqueCharacters,
+			WordCount:    stringData.WordCount,
+			FreqMap:      freqMap,
+		},
+		CreatedAt: stringData.CreatedAt.Format(time.RFC3339),
+	}
+	return &response, nil
 }

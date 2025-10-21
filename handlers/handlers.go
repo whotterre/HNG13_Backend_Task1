@@ -53,3 +53,20 @@ func (h *StringsHandler) CreateNewString(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, response)
 }
+
+func (h *StringsHandler) GetStringByValue(c *gin.Context) {
+	stringValue := c.Param("string_value")
+
+	response, err := h.stringsService.GetStringByValue(stringValue)
+	if err != nil {
+		// Map not found error to 404
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"message": "String does not exist in the system"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve string"})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}

@@ -10,6 +10,7 @@ import (
 type StringRepository interface {
 	CreateNewStringRecord(stringData models.StringEntry) (*models.StringEntry, error)
 	GetStringByValue(value string) (*models.StringEntry, error)
+	GetStringById(id string) (*models.StringEntry, error)
 }
 
 type stringRepository struct {
@@ -23,6 +24,18 @@ func NewStringRepository(db *gorm.DB) StringRepository {
 func (s stringRepository) GetStringByValue(value string) (*models.StringEntry, error) {
 	var entry models.StringEntry
 	err := s.db.Where("value = ?", value).First(&entry).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &entry, nil
+}
+
+func (s stringRepository) GetStringById(id string) (*models.StringEntry, error) {
+	var entry models.StringEntry
+	err := s.db.Where("id = ?", id).First(&entry).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
