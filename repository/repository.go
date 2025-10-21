@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"task_one/dto"
 	"task_one/models"
 
 	"gorm.io/gorm"
@@ -11,6 +12,7 @@ type StringRepository interface {
 	CreateNewStringRecord(stringData models.StringEntry) (*models.StringEntry, error)
 	GetStringByValue(value string) (*models.StringEntry, error)
 	GetStringById(id string) (*models.StringEntry, error)
+	FilterByCriteria(input dto.FilterByCriteriaData) (*[]models.StringEntry, error)
 }
 
 type stringRepository struct {
@@ -50,4 +52,33 @@ func (s stringRepository) CreateNewStringRecord(stringData models.StringEntry) (
 		return nil, err
 	}
 	return &stringData, nil
+}
+
+func (s stringRepository) FilterByCriteria(input dto.FilterByCriteriaData) (*[]models.StringEntry, error) {
+    var entries []models.StringEntry
+    query := s.db.Model(&models.StringEntry{})
+
+    // Add conditions only if the filter values are provided
+    if !input.IsPalindrome {
+        query = query.Where("is_palindrome = ?", input.IsPalindrome)
+    }
+    if input.MinLength > 0 {
+        query = query.Where("length >= ?", input.MinLength)
+    }
+    if input.MaxLength > 0 {
+        query = query.Where("length <= ?", input.MaxLength)
+    }
+    if input.WordCount > 0 {
+        query = query.Where("word_count = ?", input.WordCount)
+    }
+    
+    // Check if JSONB field contains a specific key
+    if input.ContainsCharacter != "" {
+        query = query.Where("character_frequency_map ? ?", input.ContainsCharacter)
+    }
+
+    if err := query.Find(&entries).Error; err != nil {
+        return nil, err
+    }
+    return &entries, nil
 }

@@ -1,6 +1,8 @@
 package dto
 
-import "time"
+import (
+	"time"
+)
 
 type CreateNewStringEntryRequest struct {
 	Value string `json:"value"`
@@ -19,12 +21,26 @@ type CreateNewStringResponse struct {
 	Id         string           `json:"id"`
 	Value      string           `json:"value"`
 	Properties StringProperties `json:"properties"`
-	CreatedAt    time.Time      `json:"created_at"`
+	CreatedAt  time.Time        `json:"created_at"`
 }
 
 type GetStringByValueResponse struct {
 	Id         string           `json:"id"`
 	Value      string           `json:"value"`
 	Properties StringProperties `json:"properties"`
-	CreatedAt    string      `json:"created_at"`
+	CreatedAt  string           `json:"created_at"`
+}
+
+type FilterByCriteriaData struct {
+	IsPalindrome      bool   `json:"is_palindrome"`
+	MinLength         int    `json:"min_length"`
+	MaxLength         int    `json:"max_length"`
+	WordCount         int    `json:"word_count"`
+	ContainsCharacter string `json:"contains_character"`
+}
+
+type FilterByCriteriaResponse struct {
+	Data           []GetStringByValueResponse `json:"data"`
+	Count          int                        `json:"count"`
+	FiltersApplied map[string]any             `json:"filters_applied"`
 }

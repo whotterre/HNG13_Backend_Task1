@@ -10,17 +10,24 @@ import (
 	"time"
 )
 
-type StringService struct {
+
+type StringService interface {
+	CreateNewString(input dto.CreateNewStringEntryRequest) (*dto.CreateNewStringResponse, error)
+	GetStringByValue(value string) (*dto.GetStringByValueResponse, error)
+	FilterByCriteria(input dto.FilterByCriteriaData) (*dto.FilterByCriteriaResponse, error)
+}
+
+type stringService struct {
 	stringRepo repository.StringRepository
 }
 
-func NewStringService(stringRepo repository.StringRepository) *StringService {
-	return &StringService{
+func NewStringService(stringRepo repository.StringRepository) StringService {
+	return &stringService{
 		stringRepo: stringRepo,
 	}
 }
 
-func (s *StringService) CreateNewString(input dto.CreateNewStringEntryRequest) (*dto.CreateNewStringResponse, error) {
+func (s *stringService) CreateNewString(input dto.CreateNewStringEntryRequest) (*dto.CreateNewStringResponse, error) {
 	// Check for duplicates by value
 	if existing, err := s.stringRepo.GetStringByValue(input.Value); err != nil {
 		return nil, err
@@ -75,7 +82,7 @@ func (s *StringService) CreateNewString(input dto.CreateNewStringEntryRequest) (
 	return &finalResponse, nil
 }
 
-func (s *StringService) GetStringByValue(value string) (*dto.GetStringByValueResponse, error) {
+func (s *stringService) GetStringByValue(value string) (*dto.GetStringByValueResponse, error) {
 	// Generate SHA256 sum
 	stringHash := GetHash(value)
 
@@ -105,6 +112,48 @@ func (s *StringService) GetStringByValue(value string) (*dto.GetStringByValueRes
 			FreqMap:      freqMap,
 		},
 		CreatedAt: stringData.CreatedAt.Format(time.RFC3339),
+	}
+	return &response, nil
+}
+
+func (s *stringService) FilterByCriteria(input dto.FilterByCriteriaData) (*dto.FilterByCriteriaResponse, error){
+	// Filter by data
+	stringData, err := s.stringRepo.FilterByCriteria(input)
+	if err != nil {
+		return nil, err		
+	}
+
+	// Transform []models.StringEntry to []dto.GetStringByValueResponse
+	var transformedData []dto.GetStringByValueResponse
+	for _, entry := range *stringData {
+		var freqMap map[string]int
+		if err := json.Unmarshal(entry.CharacterFrequencyMap, &freqMap); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal frequency map: %v", err)
+		}
+
+		transformedData = append(transformedData, dto.GetStringByValueResponse{
+			Id:    entry.ID,
+			Value: entry.Value,
+			Properties: dto.StringProperties{
+				Length:       entry.Length,
+				IsPalindrome: entry.IsPalindrome,
+				UniqueChars:  entry.UniqueCharacters,
+				WordCount:    entry.WordCount,
+				FreqMap:      freqMap,
+			},
+			CreatedAt: entry.CreatedAt.Format(time.RFC3339),
+		})
+	}
+
+	// Convert input struct to map[string]any
+	filtersMap := make(map[string]any)
+	inputJSON, _ := json.Marshal(input)
+	json.Unmarshal(inputJSON, &filtersMap)
+	
+	response := dto.FilterByCriteriaResponse{
+		Data: transformedData,
+		Count: len(transformedData),
+		FiltersApplied: filtersMap,
 	}
 	return &response, nil
 }

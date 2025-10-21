@@ -12,8 +12,9 @@ import (
 func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 	stringRepo := repository.NewStringRepository(db)
 	stringService := services.NewStringService(stringRepo)
-	stringHandler := handlers.NewStringsHandler(*stringService)
+	stringHandler := handlers.NewStringsHandler(stringService)
 	// Routes
 	router.POST("/strings", stringHandler.CreateNewString)
 	router.GET("/strings/:string_value", stringHandler.GetStringByValue)
+	router.GET("/strings", stringHandler.FilterByCriteria)
 }

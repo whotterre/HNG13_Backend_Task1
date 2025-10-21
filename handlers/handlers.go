@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 	"task_one/dto"
 	"task_one/services"
@@ -65,6 +66,70 @@ func (h *StringsHandler) GetStringByValue(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve string"})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *StringsHandler) FilterByCriteria(c *gin.Context) {
+	isPalindrome := c.Query("is_palindrome")
+	minLength := c.Query("min_length")
+	maxLength := c.Query("max_length")
+	wordCount := c.Query("word_count")
+	containsCharacter := c.Query("contains_character")
+
+	// Convert query elements to their actual data types
+	var minLengthInt int
+	if minLength != "" {
+		val, err := strconv.Atoi(minLength)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Bad query"})
+			return
+		}
+		minLengthInt = val
+	}
+
+	var maxLengthInt int
+	if maxLength != "" {
+		val, err := strconv.Atoi(maxLength)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Bad query"})
+			return
+		}
+		maxLengthInt = val
+	}
+
+	var wordCountInt int
+	if wordCount != "" {
+		val, err := strconv.Atoi(wordCount)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Bad query"})
+			return
+		}
+		wordCountInt = val
+	}
+
+	// Check if isPalindrome is a valid boolean
+	isPalindromeBool := false
+	if isPalindrome != "" {
+		isPalindromeBool = (isPalindrome == "true")
+	}
+
+	// Check if containsCharacter is provided
+	containsCharacterStr := containsCharacter
+	// Populate the dto
+	input := dto.FilterByCriteriaData{
+		IsPalindrome:      isPalindromeBool,
+		MinLength:         minLengthInt,
+		MaxLength:         maxLengthInt,
+		WordCount:         wordCountInt,
+		ContainsCharacter: containsCharacterStr,
+	}
+
+	response, err := h.stringsService.FilterByCriteria(input)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve strings"})
 		return
 	}
 
