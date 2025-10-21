@@ -47,8 +47,10 @@ func getCharFreqMap(value string) map[string]int {
 	freqMap := make(map[string]int)
 	normalized := strings.TrimSpace(strings.ToLower(value))
 	for _, r := range normalized {
-		ch := string(r)
-		freqMap[ch]++
+		if r != ' ' {
+			ch := string(r)
+			freqMap[ch]++
+		}
 	}
 	return freqMap
 }

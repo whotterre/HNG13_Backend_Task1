@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-
 type StringService interface {
 	CreateNewString(input dto.CreateNewStringEntryRequest) (*dto.CreateNewStringResponse, error)
 	GetStringByValue(value string) (*dto.GetStringByValueResponse, error)
@@ -116,14 +115,12 @@ func (s *stringService) GetStringByValue(value string) (*dto.GetStringByValueRes
 	return &response, nil
 }
 
-func (s *stringService) FilterByCriteria(input dto.FilterByCriteriaData) (*dto.FilterByCriteriaResponse, error){
-	// Filter by data
+func (s *stringService) FilterByCriteria(input dto.FilterByCriteriaData) (*dto.FilterByCriteriaResponse, error) {
 	stringData, err := s.stringRepo.FilterByCriteria(input)
 	if err != nil {
-		return nil, err		
+		return nil, err
 	}
 
-	// Transform []models.StringEntry to []dto.GetStringByValueResponse
 	var transformedData []dto.GetStringByValueResponse
 	for _, entry := range *stringData {
 		var freqMap map[string]int
@@ -145,14 +142,27 @@ func (s *stringService) FilterByCriteria(input dto.FilterByCriteriaData) (*dto.F
 		})
 	}
 
-	// Convert input struct to map[string]any
+	// Build filters_applied with only non-nil values
 	filtersMap := make(map[string]any)
-	inputJSON, _ := json.Marshal(input)
-	json.Unmarshal(inputJSON, &filtersMap)
-	
+	if input.IsPalindrome != nil {
+		filtersMap["is_palindrome"] = *input.IsPalindrome
+	}
+	if input.MinLength != nil {
+		filtersMap["min_length"] = *input.MinLength
+	}
+	if input.MaxLength != nil {
+		filtersMap["max_length"] = *input.MaxLength
+	}
+	if input.WordCount != nil {
+		filtersMap["word_count"] = *input.WordCount
+	}
+	if input.ContainsCharacter != nil {
+		filtersMap["contains_character"] = *input.ContainsCharacter
+	}
+
 	response := dto.FilterByCriteriaResponse{
-		Data: transformedData,
-		Count: len(transformedData),
+		Data:          transformedData,
+		Count:         len(transformedData),
 		FiltersApplied: filtersMap,
 	}
 	return &response, nil

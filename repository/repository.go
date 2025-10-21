@@ -55,30 +55,30 @@ func (s stringRepository) CreateNewStringRecord(stringData models.StringEntry) (
 }
 
 func (s stringRepository) FilterByCriteria(input dto.FilterByCriteriaData) (*[]models.StringEntry, error) {
-    var entries []models.StringEntry
-    query := s.db.Model(&models.StringEntry{})
+	var entries []models.StringEntry
+	query := s.db.Model(&models.StringEntry{})
 
-    // Add conditions only if the filter values are provided
-    if !input.IsPalindrome {
-        query = query.Where("is_palindrome = ?", input.IsPalindrome)
-    }
-    if input.MinLength > 0 {
-        query = query.Where("length >= ?", input.MinLength)
-    }
-    if input.MaxLength > 0 {
-        query = query.Where("length <= ?", input.MaxLength)
-    }
-    if input.WordCount > 0 {
-        query = query.Where("word_count = ?", input.WordCount)
-    }
-    
-    // Check if JSONB field contains a specific key
-    if input.ContainsCharacter != "" {
-        query = query.Where("character_frequency_map ? ?", input.ContainsCharacter)
-    }
+	// Add conditions only if the filter values are provided
+	if input.IsPalindrome != nil {
+		query = query.Where("is_palindrome = ?", *input.IsPalindrome)
+	}
+	if input.MinLength != nil {
+		query = query.Where("length >= ?", *input.MinLength)
+	}
+	if input.MaxLength != nil {
+		query = query.Where("length <= ?", *input.MaxLength)
+	}
+	if input.WordCount != nil {
+		query = query.Where("word_count = ?", *input.WordCount)
+	}
 
-    if err := query.Find(&entries).Error; err != nil {
-        return nil, err
-    }
-    return &entries, nil
+	// Check if JSONB field contains a specific key
+	if input.ContainsCharacter != nil {
+		query = query.Where("character_frequency_map -> ? IS NOT NULL", *input.ContainsCharacter)
+	}
+
+	if err := query.Find(&entries).Error; err != nil {
+		return nil, err
+	}
+	return &entries, nil
 }

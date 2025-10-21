@@ -32,11 +32,11 @@ type GetStringByValueResponse struct {
 }
 
 type FilterByCriteriaData struct {
-	IsPalindrome      bool   `json:"is_palindrome"`
-	MinLength         int    `json:"min_length"`
-	MaxLength         int    `json:"max_length"`
-	WordCount         int    `json:"word_count"`
-	ContainsCharacter string `json:"contains_character"`
+	IsPalindrome      *bool   `json:"is_palindrome,omitempty"`
+	MinLength         *int    `json:"min_length,omitempty"`
+	MaxLength         *int    `json:"max_length,omitempty"`
+	WordCount         *int    `json:"word_count,omitempty"`
+	ContainsCharacter *string `json:"contains_character,omitempty"`
 }
 
 type FilterByCriteriaResponse struct {

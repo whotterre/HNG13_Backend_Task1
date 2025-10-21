@@ -79,52 +79,63 @@ func (h *StringsHandler) FilterByCriteria(c *gin.Context) {
 	wordCount := c.Query("word_count")
 	containsCharacter := c.Query("contains_character")
 
-	// Convert query elements to their actual data types
-	var minLengthInt int
+	input := dto.FilterByCriteriaData{}
+
+	// Parse and validate is_palindrome
+	if isPalindrome != "" {
+		if isPalindrome == "true" {
+			val := true
+			input.IsPalindrome = &val
+		} else if isPalindrome == "false" {
+			val := false
+			input.IsPalindrome = &val
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Bad query"})
+			return
+		}
+	}
+
+	// Parse and validate min_length
 	if minLength != "" {
 		val, err := strconv.Atoi(minLength)
-		if err != nil {
+		if err != nil || val < 0 {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Bad query"})
 			return
 		}
-		minLengthInt = val
+		input.MinLength = &val
 	}
 
-	var maxLengthInt int
+	// Parse and validate max_length
 	if maxLength != "" {
 		val, err := strconv.Atoi(maxLength)
-		if err != nil {
+		if err != nil || val < 0 {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Bad query"})
 			return
 		}
-		maxLengthInt = val
+		input.MaxLength = &val
 	}
 
-	var wordCountInt int
+	// Parse and validate word_count
 	if wordCount != "" {
 		val, err := strconv.Atoi(wordCount)
-		if err != nil {
+		if err != nil || val < 0 {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Bad query"})
 			return
 		}
-		wordCountInt = val
+		input.WordCount = &val
 	}
 
-	// Check if isPalindrome is a valid boolean
-	isPalindromeBool := false
-	if isPalindrome != "" {
-		isPalindromeBool = (isPalindrome == "true")
+	// Validate min_length <= max_length
+	if input.MinLength != nil && input.MaxLength != nil {
+		if *input.MinLength > *input.MaxLength {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Bad query"})
+			return
+		}
 	}
 
-	// Check if containsCharacter is provided
-	containsCharacterStr := containsCharacter
-	// Populate the dto
-	input := dto.FilterByCriteriaData{
-		IsPalindrome:      isPalindromeBool,
-		MinLength:         minLengthInt,
-		MaxLength:         maxLengthInt,
-		WordCount:         wordCountInt,
-		ContainsCharacter: containsCharacterStr,
+	// Parse contains_character
+	if containsCharacter != "" {
+		input.ContainsCharacter = &containsCharacter
 	}
 
 	response, err := h.stringsService.FilterByCriteria(input)
