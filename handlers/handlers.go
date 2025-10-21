@@ -147,6 +147,35 @@ func (h *StringsHandler) FilterByCriteria(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func (h *StringsHandler) FilterByNaturalLanguage(c *gin.Context) {
+	query := c.Query("query")
+	if query == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Query parameter is required"})
+		return
+	}
+
+	input := dto.FilterByNaturalLanguageRequest{
+		Query: query,
+	}
+
+	response, err := h.stringsService.FilterByNaturalLanguage(input)
+	if err != nil {
+		// Check if it's a parsing error (400) or validation error (422)
+		if strings.Contains(err.Error(), "unable to parse") {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Unable to parse natural language query"})
+			return
+		}
+		if strings.Contains(err.Error(), "conflicting filters") {
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"message": "Query parsed but resulted in conflicting filters"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve strings"})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 func (h *StringsHandler) DeleteStringEntry(c *gin.Context) {
 	// get the string value
 	value := c.Param("string_value")

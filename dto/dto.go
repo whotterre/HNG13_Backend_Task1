@@ -44,3 +44,18 @@ type FilterByCriteriaResponse struct {
 	Count          int                        `json:"count"`
 	FiltersApplied map[string]any             `json:"filters_applied"`
 }
+
+type FilterByNaturalLanguageRequest struct {
+	Query string `json:"query"`
+}
+
+type InterpretedQuery struct {
+	Original      string         `json:"original"`
+	ParsedFilters map[string]any `json:"parsed_filters"`
+}
+
+type FilterByNaturalLanguageResponse struct {
+	Data             []GetStringByValueResponse `json:"data"`
+	Count            int                        `json:"count"`
+	InterpretedQuery InterpretedQuery           `json:"interpreted_query"`
+}

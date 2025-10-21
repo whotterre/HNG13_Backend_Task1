@@ -14,6 +14,7 @@ type StringService interface {
 	CreateNewString(input dto.CreateNewStringEntryRequest) (*dto.CreateNewStringResponse, error)
 	GetStringByValue(value string) (*dto.GetStringByValueResponse, error)
 	FilterByCriteria(input dto.FilterByCriteriaData) (*dto.FilterByCriteriaResponse, error)
+	FilterByNaturalLanguage(input dto.FilterByNaturalLanguageRequest) (*dto.FilterByNaturalLanguageResponse, error)
 	DeleteStringEntry(value string) error
 }
 
@@ -167,6 +168,36 @@ func (s *stringService) FilterByCriteria(input dto.FilterByCriteriaData) (*dto.F
 		FiltersApplied: filtersMap,
 	}
 	return &response, nil
+}
+
+func (s *stringService) FilterByNaturalLanguage(input dto.FilterByNaturalLanguageRequest) (*dto.FilterByNaturalLanguageResponse, error) {
+	// Parse the natural language query
+	parser := NewNaturalLanguageParser()
+	filters, interpretedQuery, err := parser.ParseQuery(input.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use the existing FilterByCriteria method
+	criteriaResponse, err := s.FilterByCriteria(*filters)
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure data is not nil
+	data := criteriaResponse.Data
+	if data == nil {
+		data = []dto.GetStringByValueResponse{}
+	}
+
+	// Convert to natural language response
+	response := &dto.FilterByNaturalLanguageResponse{
+		Data:             data,
+		Count:            criteriaResponse.Count,
+		InterpretedQuery: *interpretedQuery,
+	}
+
+	return response, nil
 }
 
 func (s *stringService) DeleteStringEntry(value string) error {
